@@ -39,7 +39,7 @@ export class TraningService {
             date: new Date(), 
             state: 'cancelled',
             duration: this.runningExercise.duration * (progress / 100),
-            calories: this.runningExercise.duration * (progress / 100),
+            calories: this.runningExercise.calories * (progress / 100),
         });
         this.runningExercise = null;
         this.exerciseChanged.next(null);
@@ -47,5 +47,9 @@ export class TraningService {
 
     getRunningExercise(): Observable<Exercise> {
         return of({...this.runningExercise})
+    }
+
+    getCompletedOrCancelledExercises(): Observable<Exercise[]> {
+        return of(this.exercises.slice())
     }
 }
