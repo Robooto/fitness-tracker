@@ -1,40 +1,48 @@
 import { Injectable } from '@angular/core';
 import { Exercise } from './exercise.model';
 import { of, Observable, Subject } from 'rxjs';
+import { AngularFirestore } from '@angular/fire/firestore';
+import { map, tap } from 'rxjs/operators';
 
 @Injectable()
 export class TraningService {
-    availableExercises: Exercise[] = [
-        { id: 'crunches', name: 'Crunches', duration: 30, calories: 8 },
-        { id: 'touch-toes', name: 'Touch Toes', duration: 180, calories: 15 },
-        { id: 'side-lunges', name: 'Side Lunges', duration: 120, calories: 18 },
-        { id: 'burpees', name: 'Burpees', duration: 60, calories: 8 }
-    ];
-
+    availableExercises: Exercise[] = [];
     private runningExercise: Exercise;
-    private exercises: Exercise[] = [];
     exerciseChanged = new Subject<Exercise>();
 
-    constructor() {}
+    constructor(private db: AngularFirestore) {}
 
-    getAvailableExercises(): Observable<Exercise[]> {
-        return of(this.availableExercises);
+    fetchAvailableExercises(): Observable<Exercise[]> {
+        return this.db.collection('availableExercises').snapshotChanges().pipe(
+            map(res => res.map(doc => {
+              return {
+                id: doc.payload.doc.id,
+                ...doc.payload.doc.data()
+              } as Exercise
+            })),
+            tap(exercises => {
+                this.availableExercises = exercises;
+            })
+          );
     }
 
     startExercise(selectedId: string) {
+        this.db.doc(`availableExercises/${selectedId}`).update({
+            lastSelected: new Date()
+        });
         const selectedExercise = this.availableExercises.find(ex => ex.id === selectedId);
         this.runningExercise = selectedExercise;
         this.exerciseChanged.next({...this.runningExercise});
     }
 
     completeExercise() {
-        this.exercises.push({...this.runningExercise, date: new Date(), state: 'completed'});
+        this.addDataToDatabase({...this.runningExercise, date: new Date(), state: 'completed'});
         this.runningExercise = null;
         this.exerciseChanged.next(null);
     }
 
     cancelExercise(progress: number) {
-        this.exercises.push({
+        this.addDataToDatabase({
             ...this.runningExercise, 
             date: new Date(), 
             state: 'cancelled',
@@ -50,6 +58,10 @@ export class TraningService {
     }
 
     getCompletedOrCancelledExercises(): Observable<Exercise[]> {
-        return of(this.exercises.slice())
+        return this.db.collection<Exercise>('finishedExercises').valueChanges();
+    }
+
+    private addDataToDatabase(exercise: Exercise) {
+        this.db.collection('finishedExercises').add(exercise);
     }
 }

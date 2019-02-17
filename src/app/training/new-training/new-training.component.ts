@@ -3,6 +3,8 @@ import { TraningService } from '../training.service';
 import { Observable } from 'rxjs';
 import { Exercise } from '../exercise.model';
 import { NgForm } from '@angular/forms';
+import { AngularFirestore } from '@angular/fire/firestore';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-new-training',
@@ -10,12 +12,12 @@ import { NgForm } from '@angular/forms';
   styleUrls: ['./new-training.component.css']
 })
 export class NewTrainingComponent implements OnInit {
-  excersize$: Observable<Exercise[]>;
+  excersize$: Observable<any>;
   
   constructor(private trainingService: TraningService) { }
 
   ngOnInit() {
-    this.excersize$ = this.trainingService.getAvailableExercises();
+    this.excersize$ = this.trainingService.fetchAvailableExercises();
   }
 
   onStartTraining(form: NgForm) {
