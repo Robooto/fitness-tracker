@@ -1,10 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { TraningService } from '../training.service';
 import { Observable } from 'rxjs';
-import { Exercise } from '../exercise.model';
 import { NgForm } from '@angular/forms';
-import { AngularFirestore } from '@angular/fire/firestore';
-import { map } from 'rxjs/operators';
+import { UIService } from 'src/app/shared/ui.service';
 
 @Component({
   selector: 'app-new-training',
@@ -13,10 +11,12 @@ import { map } from 'rxjs/operators';
 })
 export class NewTrainingComponent implements OnInit {
   excersize$: Observable<any>;
+  isLoading$: Observable<boolean>;
   
-  constructor(private trainingService: TraningService) { }
+  constructor(private trainingService: TraningService, private uiService: UIService) { }
 
   ngOnInit() {
+    this.isLoading$ = this.uiService.loadingStateChanged.asObservable();
     this.excersize$ = this.trainingService.fetchAvailableExercises();
   }
 

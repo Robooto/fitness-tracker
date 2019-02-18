@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { Exercise } from './exercise.model';
 import { of, Observable, Subject } from 'rxjs';
 import { AngularFirestore } from '@angular/fire/firestore';
-import { map, tap } from 'rxjs/operators';
+import { map, tap, catchError } from 'rxjs/operators';
+import { UIService } from '../shared/ui.service';
 
 @Injectable()
 export class TraningService {
@@ -10,9 +11,10 @@ export class TraningService {
     private runningExercise: Exercise;
     exerciseChanged = new Subject<Exercise>();
 
-    constructor(private db: AngularFirestore) {}
+    constructor(private db: AngularFirestore, private uiService: UIService) {}
 
     fetchAvailableExercises(): Observable<Exercise[]> {
+        this.uiService.loadingStateChanged.next(true);
         return this.db.collection('availableExercises').snapshotChanges().pipe(
             map(res => res.map(doc => {
               return {
@@ -22,8 +24,13 @@ export class TraningService {
             })),
             tap(exercises => {
                 this.availableExercises = exercises;
+                this.uiService.loadingStateChanged.next(false);
+            }),
+            catchError(error => {
+                this.uiService.showSnackbar('Fetching exercises problem!', null, 3000);
+                return of([]);
             })
-          );
+        );
     }
 
     startExercise(selectedId: string) {

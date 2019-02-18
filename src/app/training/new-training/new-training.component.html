@@ -1,6 +1,6 @@
 <section class="new-training" fxLayout fxLayoutAlign="center">
   <form (ngSubmit)="onStartTraining(f)" #f="ngForm">
-    <mat-card fxFlex.xs="100%" fxFlex="400px" >
+    <mat-card fxFlex.xs="100%" fxFlex="400px" *ngIf="!(isLoading$ | async)">
       <mat-card-title fxLayoutAlign="center">Time to start a workout!</mat-card-title>
       <mat-card-content fxLayoutAlign="center">
         <mat-form-field>
@@ -15,5 +15,6 @@
         <button type="submit" mat-button [disabled]="f.invalid">Start</button>
       </mat-card-actions>
     </mat-card>
+    <mat-spinner *ngIf="(isLoading$ | async)"></mat-spinner>
   </form>
 </section>
