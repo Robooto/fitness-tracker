@@ -6,6 +6,8 @@ import { Router } from '@angular/router';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { MatSnackBar } from '@angular/material';
 import { UIService } from '../shared/ui.service';
+import { Store } from '@ngrx/store';
+import * as fromApp from '../app.reducer';
 
 @Injectable()
 export class AuthService {
@@ -15,11 +17,13 @@ export class AuthService {
     constructor(
         private router: Router,
         private afAauth: AngularFireAuth,
-        private uiService: UIService
+        private uiService: UIService,
+        private store: Store<{ui: fromApp.State}>
         ) {}
 
     registerUser(authData: AuthData) {
-        this.uiService.loadingStateChanged.next(true);
+        //this.uiService.loadingStateChanged.next(true);
+        this.store.dispatch({type: 'START_LOADING'});
         this.afAauth.auth.createUserWithEmailAndPassword(authData.email, authData.password)
             .then(result => {
                 console.log(result);
@@ -28,12 +32,16 @@ export class AuthService {
             .catch(error => {
                 this.uiService.showSnackbar(error.message, null, 3000);
             })
-            .finally(() => this.uiService.loadingStateChanged.next(false));
+            .finally(() => {
+                this.store.dispatch({type: 'STOP_LOADING'});
+                //this.uiService.loadingStateChanged.next(false)
+            });
         
     }
 
     login(authData: AuthData) {
-        this.uiService.loadingStateChanged.next(true);
+        this.store.dispatch({type: 'START_LOADING'});
+        //this.uiService.loadingStateChanged.next(true);
         this.afAauth.auth.signInWithEmailAndPassword(authData.email, authData.password)
         .then(result => {
             console.log(result);
@@ -42,7 +50,10 @@ export class AuthService {
         .catch(error => {
             this.uiService.showSnackbar(error.message, null, 3000);
         })
-        .finally(() => this.uiService.loadingStateChanged.next(false));
+        .finally(() => {
+            this.store.dispatch({type: 'STOP_LOADING'});
+            //this.uiService.loadingStateChanged.next(false)
+        });
     }
 
     logout() {
